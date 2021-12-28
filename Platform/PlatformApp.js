@@ -26,6 +26,7 @@ exports.newPlatformApp = function newPlatformApp() {
                 console.log('[ERROR] Platform App -> reason = ' + JSON.stringify(reason))
                 process.exit(1)
             }
+            console.log(reason)
             console.log('[ERROR] Platform App -> unhandledRejection -> reason = ' + JSON.stringify(reason))
             console.log('[ERROR] Platform App -> unhandledRejection -> p = ' + JSON.stringify(p))
             process.exit(1)

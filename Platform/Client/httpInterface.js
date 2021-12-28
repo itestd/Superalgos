@@ -788,6 +788,24 @@ exports.newHttpInterface = function newHttpInterface() {
                     switch (requestPath[2]) { // switch by command
 
                         case 'Contribute': {
+                            function throwError(err) {
+                                console.log('[ERROR] httpInterface -> App -> Contribute -> Method call produced an error.')
+                                console.log('[ERROR] httpInterface -> App -> Contribute -> err.stack = ' + err.stack)
+                                console.log('[ERROR] httpInterface -> App -> Contribute -> commitMessage = ' + commitMessage)
+                                console.log('[ERROR] httpInterface -> App -> Contribute -> username = ' + username)
+                                console.log('[ERROR] httpInterface -> App -> Contribute -> token starts with = ' + token.substring(0, 10) + '...')
+                                console.log('[ERROR] httpInterface -> App -> Contribute -> token ends with = ' + '...' + token.substring(token.length - 10))
+                                console.log('[ERROR] httpInterface -> App -> Contribute -> currentBranch = ' + currentBranch)
+                                console.log('[ERROR] httpInterface -> App -> Contribute -> contributionsBranch = ' + contributionsBranch)
+
+                                let error = {
+                                    result: 'Fail Because',
+                                    message: err.message,
+                                    stack: err.stack
+                                }
+                                SA.projects.foundations.utilities.httpResponses.respondWithContent(JSON.stringify(error), httpResponse)
+                            }
+
                             try {
                                 let commitMessage = unescape(requestPath[3])
                                 const username = unescape(requestPath[4])
@@ -802,7 +820,7 @@ exports.newHttpInterface = function newHttpInterface() {
                                     commitMessage = commitMessage.replace('_HASHTAG_', '#')
                                 }
 
-                                contribute()
+                                contribute().catch(throwError)
 
                                 async function contribute() {
                                     const { lookpath } = SA.nodeModules.lookpath
@@ -810,6 +828,7 @@ exports.newHttpInterface = function newHttpInterface() {
                                     if (gitpath === undefined) {
                                         console.log('[ERROR] `git` not installed.')
                                     } else {
+                                        await doGit(SA.nodeModules.path.join(process.cwd(), 'Projects/Governance/Plugins'))
                                         await doGit()
                                         if (error !== undefined) {
 
@@ -825,7 +844,9 @@ exports.newHttpInterface = function newHttpInterface() {
                                             return
                                         }
 
-                                        await doGithub()
+                                        await doGithub('Superalgos-Governance-Plugins')
+                                        // TODO isysd Creating a PR to the main repo should be done as a batch operation... Currently only matters once a month.
+                                        // await doGithub()
                                         if (error !== undefined) {
 
                                             let docs = {
@@ -844,10 +865,12 @@ exports.newHttpInterface = function newHttpInterface() {
                                     }
                                 }
 
-                                async function doGit() {
+                                async function doGit(repo) {
+                                    repo = repo || process.cwd()
+                                    console.log(repo)
                                     const simpleGit = SA.nodeModules.simpleGit
                                     const options = {
-                                        baseDir: process.cwd(),
+                                        baseDir: repo,
                                         binary: 'git',
                                         maxConcurrentProcesses: 6,
                                     }
@@ -874,7 +897,8 @@ exports.newHttpInterface = function newHttpInterface() {
                                     }
                                 }
 
-                                async function doGithub() {
+                                async function doGithub(repo='Superalgos') {
+                                    console.log(repo)
 
                                     const { Octokit } = SA.nodeModules.octokit
 
@@ -883,7 +907,6 @@ exports.newHttpInterface = function newHttpInterface() {
                                         userAgent: 'Superalgos ' + SA.version
                                     })
 
-                                    const repo = 'Superalgos'
                                     const owner = 'itestd' // TODO isysd test repo 'Superalgos'
                                     const head = username + ':' + contributionsBranch
                                     const base = currentBranch
@@ -915,21 +938,7 @@ exports.newHttpInterface = function newHttpInterface() {
                                 }
 
                             } catch (err) {
-                                console.log('[ERROR] httpInterface -> App -> Contribute -> Method call produced an error.')
-                                console.log('[ERROR] httpInterface -> App -> Contribute -> err.stack = ' + err.stack)
-                                console.log('[ERROR] httpInterface -> App -> Contribute -> commitMessage = ' + commitMessage)
-                                console.log('[ERROR] httpInterface -> App -> Contribute -> username = ' + username)
-                                console.log('[ERROR] httpInterface -> App -> Contribute -> token starts with = ' + token.substring(0, 10) + '...')
-                                console.log('[ERROR] httpInterface -> App -> Contribute -> token ends with = ' + '...' + token.substring(token.length - 10))
-                                console.log('[ERROR] httpInterface -> App -> Contribute -> currentBranch = ' + currentBranch)
-                                console.log('[ERROR] httpInterface -> App -> Contribute -> contributionsBranch = ' + contributionsBranch)
-
-                                let error = {
-                                    result: 'Fail Because',
-                                    message: err.message,
-                                    stack: err.stack
-                                }
-                                SA.projects.foundations.utilities.httpResponses.respondWithContent(JSON.stringify(error), httpResponse)
+                                throwError(err)
                             }
                             break
                         }
