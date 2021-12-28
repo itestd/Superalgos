@@ -884,7 +884,7 @@ exports.newHttpInterface = function newHttpInterface() {
                                     })
 
                                     const repo = 'Superalgos'
-                                    const owner = 'Superalgos'
+                                    const owner = 'itestd' // TODO isysd test repo 'Superalgos'
                                     const head = username + ':' + contributionsBranch
                                     const base = currentBranch
                                     const title = 'Contribution: ' + commitMessage
