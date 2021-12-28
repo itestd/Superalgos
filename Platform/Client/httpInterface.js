@@ -867,7 +867,6 @@ exports.newHttpInterface = function newHttpInterface() {
 
                                 async function doGit(repo) {
                                     repo = repo || process.cwd()
-                                    console.log(repo)
                                     const simpleGit = SA.nodeModules.simpleGit
                                     const options = {
                                         baseDir: repo,
@@ -921,6 +920,7 @@ exports.newHttpInterface = function newHttpInterface() {
                                             base,
                                         });
                                     } catch (err) {
+                                        console.log(err)
                                         if (err.stack.indexOf('A pull request already exists') >= 0) {
                                             return
                                         } else {
